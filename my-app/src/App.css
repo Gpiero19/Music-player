@@ -1,0 +1,42 @@
+#root {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
+}
+
+.music-note {
+  font-size: 5em;
+  will-change: filter;
+  transition: filter 300ms;
+  padding-bottom: 3rem;
+}
+.music-note:hover {
+  filter: drop-shadow(0 0 2em #646cffaa);
+}
+.music-note.react:hover {
+  filter: drop-shadow(0 0 2em #61dafbaa);
+}
+
+@keyframes music-note {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  a:nth-of-type(2) .music-note {
+    animation: music-note infinite 20s linear;
+  }
+}
+
+.card {
+  padding: 2em;
+}
+
+.read-the-docs {
+  color: #888;
+}

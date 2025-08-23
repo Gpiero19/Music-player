@@ -1,0 +1,21 @@
+/* .button {
+  background-color: #1a1a1a;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  color: white;
+  cursor: pointer;
+  padding: 0.6em 1.2em;
+  font-size: 1em;
+  font-weight: 500;
+  transition: background-color 0.25s, border-color 0.25s;
+} */
+
+.keys:hover {
+  background-color: #646cff;
+  border-color: #646cff;
+}
+
+.keys:focus,
+.keys:focus-visible {
+  outline: 4px auto -webkit-focus-ring-color;
+}
