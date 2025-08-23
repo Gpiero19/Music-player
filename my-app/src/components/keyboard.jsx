@@ -7,9 +7,13 @@ import Crash from "../sounds/crash-drum.mp3";
 import Drum2 from "../sounds/drums-1-converted.mp3";
 import Clap from "../sounds/clap1.mp3";
 import Drum3 from "../sounds/drum2.mp3";
+import './keyboard.css'
 
 export default function Keyboard() {
-    const keySound = useMemo(() => [
+    const btnRefs = useRef({});
+
+    const keySound = useMemo(
+        () => [
         { name:"A", key: "A", sound: Singing },
         { name:"S", key: "S", sound: Redoble },
         { name:"D", key: "D", sound: Crash },
@@ -19,8 +23,6 @@ export default function Keyboard() {
         { name:"K", key: "K", sound: Drum3 },
         { name:"L", key: "L", sound: Farts },
     ], []);
-
-    const btnRefs = useRef({});
 
     const playSound = (sound) => {
         const audio = new Audio(sound);

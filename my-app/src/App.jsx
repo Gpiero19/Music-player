@@ -7,7 +7,7 @@ function App() {
   return (
     <>
       <div className="container">
-        <MusicNote className='music-note' />
+        <MusicNote className='music-note dancing' />
         <Keyboard />
       </div>
     </>

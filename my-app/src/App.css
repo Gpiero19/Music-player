@@ -7,9 +7,9 @@
 
 .music-note {
   font-size: 5em;
-  will-change: filter;
+  will-change: transform, filter;
   transition: filter 300ms;
-  padding-bottom: 3rem;
+  padding-bottom: 4rem;
 }
 .music-note:hover {
   filter: drop-shadow(0 0 2em #646cffaa);
@@ -18,17 +18,29 @@
   filter: drop-shadow(0 0 2em #61dafbaa);
 }
 
-@keyframes music-note {
-  from {
-    transform: rotate(0deg);
+@keyframes dance {
+  0% {
+    transform: rotate(0deg) translateY(0px);
   }
-  to {
-    transform: rotate(360deg);
+  25% {
+    transform: rotate(10deg) translateY(-5px);
+  }
+  50% {
+    transform: rotate(-10deg) translateY(5px);
+  }
+  75% {
+    transform: rotate(10deg) translateY(-5px);
+  }
+  100% {
+    transform: rotate(0deg) translateY(0px);
   }
 }
+.music-note.dancing {
+  animation: dance 2s infinite linear;
+}
 
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .music-note {
-    animation: music-note infinite 20s linear;
+@media (prefers-reduced-motion: reduce) {
+  .music-note.dancing {
+    animation: none;
   }
 }
