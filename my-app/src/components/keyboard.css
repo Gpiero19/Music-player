@@ -1,21 +1,31 @@
-/* .button {
-  background-color: #1a1a1a;
-  border: 1px solid transparent;
-  border-radius: 8px;
-  color: white;
-  cursor: pointer;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  transition: background-color 0.25s, border-color 0.25s;
-} */
-
-.keys:hover {
-  background-color: #646cff;
-  border-color: #646cff;
+/* Keyboard.css */
+.keyboard {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
-.keys:focus,
-.keys:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
+.keys {
+  width: 80px;
+  height: 80px;
+  border: none;
+  border-radius: 12px;
+  background: #222;
+  color: #fff;
+  font-size: 24px;
+  cursor: pointer;
+  transition: transform 120ms ease, background 120ms ease, box-shadow 120ms ease;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+}
+
+/* Mouse click visual */
+.keys:active {
+  transform: scale(1.12);
+}
+
+/* Programmatic highlight (for keyboard events) */
+.keys.active {
+  transform: scale(1.12);
+  background: #333;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.35);
 }

@@ -1,21 +1,26 @@
-import React, {useEffect} from "react";
-import TestSound from "../sounds/bass-drum.mp3";
+import React, {useEffect, useRef, useMemo} from "react";
+import Drum from "../sounds/bass-drum.mp3";
 import Singing from "../sounds/singing-guy.mp3";
 import Redoble from "../sounds/redoble.mp3";
 import Farts from "../sounds/farts-value.mp3";
 import Crash from "../sounds/crash-drum.mp3";
+import Drum2 from "../sounds/drums-1-converted.mp3";
+import Clap from "../sounds/clap1.mp3";
+import Drum3 from "../sounds/drum2.mp3";
 
 export default function Keyboard() {
-    const keySound = [
+    const keySound = useMemo(() => [
         { name:"A", key: "A", sound: Singing },
         { name:"S", key: "S", sound: Redoble },
         { name:"D", key: "D", sound: Crash },
-        { name:"F", key: "F", sound: TestSound },
-        { name:"H", key: "H", sound: TestSound },
-        { name:"J", key: "J", sound: TestSound },
-        { name:"K", key: "K", sound: TestSound },
+        { name:"F", key: "F", sound: Drum },
+        { name:"H", key: "H", sound: Drum2 },
+        { name:"J", key: "J", sound: Clap },
+        { name:"K", key: "K", sound: Drum3 },
         { name:"L", key: "L", sound: Farts },
-    ];
+    ], []);
+
+    const btnRefs = useRef({});
 
     const playSound = (sound) => {
         const audio = new Audio(sound);
@@ -23,29 +28,41 @@ export default function Keyboard() {
         audio.play();
     };
 
+    const flashKey = (k) => {
+        const el = btnRefs.current[k] || document.getElementById(`key-${k}`); // fallback if ref not set
+        if (!el) return;
+        el.classList.add("active");
+        setTimeout(() => el.classList.remove("active"), 150);
+    };
+
     useEffect(() => {
         const handleKeyDown = (event) => {
             const key = event.key.toUpperCase();
-            const sound = keySound.find((k) => k.key === key);
+            const sound = keySound.find((x) => x.key === key);
             console.log(sound, key);
-            if (sound) {
-                playSound(sound.sound);
-            }
+            if (!sound) return
+            playSound(sound.sound);
+            flashKey(key);
         };
 
         document.addEventListener("keydown", handleKeyDown);
         return () => {
             document.removeEventListener("keydown", handleKeyDown);
         };
-    }, []);
+    }, [keySound]);
 
     return (
         <div className="keyboard">
             {keySound.map((key) => (
                 <button 
+                id={`key-${key.key}`}
                 className='keys' 
                 key={key.name} 
-                onClick={() => playSound(key.sound)}
+                ref={(el) => (btnRefs.current[key.key] = el)}
+                onMouseDown={() => {
+                    playSound(key.sound);
+                    flashKey(key.key);
+                }}
                 >
                     {key.name}
                 </button>
