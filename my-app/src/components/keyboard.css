@@ -17,12 +17,10 @@
   box-shadow: 0 2px 6px rgba(0,0,0,0.25);
 }
 
-/* Mouse click visual */
 .keys:active {
   transform: scale(1.12);
 }
 
-/* Programmatic highlight (for keyboard events) */
 .keys.active {
   transform: scale(1.12);
   background: #218e1f;
