@@ -1,12 +1,13 @@
 import React, {useEffect, useRef, useMemo} from "react";
 import Drum from "../sounds/bass-drum.mp3";
-import Singing from "../sounds/singing-guy.mp3";
-import Redoble from "../sounds/redoble.mp3";
 import Farts from "../sounds/farts-value.mp3";
 import Crash from "../sounds/crash-drum.mp3";
 import Drum2 from "../sounds/drums-1-converted.mp3";
 import Clap from "../sounds/clap1.mp3";
 import Drum3 from "../sounds/drum2.mp3";
+import SnareDrum from "../sounds/snare-drum.mp3";
+import DrumKick from "../sounds/acoustic-drum-kick.mp3";
+import DrumStick from "../sounds/drum-stick.mp3";
 import './keyboard.css'
 
 export default function Keyboard() {
@@ -14,14 +15,14 @@ export default function Keyboard() {
 
     const keySound = useMemo(
         () => [
-        { name:"A", key: "A", sound: Singing },
-        { name:"S", key: "S", sound: Redoble },
+        { name:"A", key: "A", sound: SnareDrum },
+        { name:"S", key: "S", sound: DrumKick },
         { name:"D", key: "D", sound: Crash },
         { name:"F", key: "F", sound: Drum },
         { name:"H", key: "H", sound: Drum2 },
         { name:"J", key: "J", sound: Clap },
         { name:"K", key: "K", sound: Drum3 },
-        { name:"L", key: "L", sound: Farts },
+        { name:"L", key: "L", sound: DrumStick },
     ], []);
 
     const playSound = (sound) => {
@@ -72,3 +73,6 @@ export default function Keyboard() {
         </div>
     );
 }
+
+
+// Add a way to record what was played and play it back - so you can create a beat for your own
