@@ -1,4 +1,4 @@
-.keyboard {
+/* .keyboard {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
@@ -25,4 +25,42 @@
   transform: scale(1.12);
   background: #218e1f;
   box-shadow: 0 6px 18px rgba(0,0,0,0.35);
+} */
+
+.keyboard {
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  gap: 4px;
+  padding: 20px;
+  /* background: white; */
+  border-radius: 12px;
+  /* box-shadow: 0 4px 12px rgba(0,0,0,0.15); */
+}
+
+.keys {
+  width: 60px;
+  height: 200px;
+  background: white;
+  border: 3px solid #ccc;
+  border-radius: 6px;
+  box-shadow: 0 4px #999;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  font-size: 14px;
+  font-weight: bold;
+  color: #444;
+  transition: all 0.1s ease-in-out;
+}
+
+.keys:hover {
+  background: #fdf5d3;
+}
+
+.keys.active {
+  background: #ffe066;
+  box-shadow: 0 2px #666;
+  transform: translateY(2px);
 }

@@ -12,6 +12,10 @@ import './keyboard.css'
 
 export default function Keyboard() {
     const btnRefs = useRef({});
+    const [recording, setRecording] = React.useState(false);
+    const [recordedKeys, setRecordedKeys] = React.useState([]);
+    const [isPlaying, setIsPlaying] = React.useState(false);
+    const recordStartTime = useRef(null);
 
     const keySound = useMemo(
         () => [
@@ -38,41 +42,88 @@ export default function Keyboard() {
         setTimeout(() => el.classList.remove("active"), 150);
     };
 
+    const handlePlayKey = (key) => {
+    playSound(key.sound);
+    flashKey(key.key);
+    if (recording) {
+        const now = Date.now();
+        setRecordedKeys(prev => [
+            ...prev,
+            { key: key.key, sound: key.sound, time: now - recordStartTime.current }
+        ]);
+    }
+    };
+
     useEffect(() => {
         const handleKeyDown = (event) => {
             const key = event.key.toUpperCase();
-            const sound = keySound.find((x) => x.key === key);
-            console.log(sound, key);
-            if (!sound) return
-            playSound(sound.sound);
-            flashKey(key);
+            const soundObj = keySound.find((x) => x.key === key);
+            if (!soundObj) return;
+            handlePlayKey(soundObj);
         };
 
         document.addEventListener("keydown", handleKeyDown);
         return () => {
             document.removeEventListener("keydown", handleKeyDown);
         };
-    }, [keySound]);
+    }, [keySound, recording]);
+
+    const startRecording = () => {
+        setRecordedKeys([]);
+        setRecording(true);
+        recordStartTime.current = Date.now();
+    };
+
+    const stopRecording = () => {
+        setRecording(false);
+    };
+
+    const playRecording = async () => {
+        if (recordedKeys.length === 0) return;
+        setIsPlaying(true);
+        for (let i = 0; i < recordedKeys.length; i++) {
+            const { key, sound, time } = recordedKeys[i];
+            const delay = i === 0 ? time : time - recordedKeys[i - 1].time;
+            await new Promise(res => setTimeout(res, delay));
+            playSound(sound);
+            flashKey(key);
+        }
+        setIsPlaying(false);
+    };
 
     return (
-        <div className="keyboard">
-            {keySound.map((key) => (
-                <button 
-                id={`key-${key.key}`}
-                className='keys' 
-                key={key.name} 
-                ref={(el) => (btnRefs.current[key.key] = el)}
-                onMouseDown={() => {
-                    playSound(key.sound);
-                    flashKey(key.key);
-                }}
-                >
-                    {key.name}
+        <div>
+            <div className="keyboard">
+                {keySound.map((key) => (
+                    <button 
+                    id={`key-${key.key}`}
+                    className='keys' 
+                    key={key.name} 
+                    ref={(el) => (btnRefs.current[key.key] = el)}
+                    onMouseDown={() => handlePlayKey(key)}
+                    disabled={isPlaying}
+                    >
+                        {key.name}
+                    </button>
+                ))}
+            </div>
+            <div style={{marginTop: 16}}>
+                {!recording ? (
+                    <button onClick={startRecording} disabled={isPlaying}>
+                        Start Recording
+                    </button>
+                ) : (
+                    <button onClick={stopRecording}>
+                        Stop Recording
+                    </button>
+                )}
+                <button onClick={playRecording} disabled={recordedKeys.length === 0 || recording || isPlaying}>
+                    Play Recording
                 </button>
-            ))}
+            </div>
         </div>
-    );
-}
+        );
+        }
 
 
 // Add a way to record what was played and play it back - so you can create a beat for your own
