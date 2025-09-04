@@ -35,12 +35,13 @@
     transform: rotate(0deg) translateY(0px);
   }
 }
-.music-note.dancing {
-  animation: dance 2s infinite linear;
+
+.music-note.dance-trigger {
+  animation: dance 0.3s linear;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .music-note.dancing {
+  .music-note.dance-trigger {
     animation: none;
   }
 }

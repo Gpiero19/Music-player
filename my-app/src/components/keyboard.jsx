@@ -1,4 +1,4 @@
-import React, {useEffect, useRef, useMemo} from "react";
+import React, {useEffect, useRef, useMemo, useCallback} from "react";
 import Drum from "../sounds/bass-drum.mp3";
 import Farts from "../sounds/farts-value.mp3";
 import Crash from "../sounds/crash-drum.mp3";
@@ -8,6 +8,8 @@ import Drum3 from "../sounds/drum2.mp3";
 import SnareDrum from "../sounds/snare-drum.mp3";
 import DrumKick from "../sounds/acoustic-drum-kick.mp3";
 import DrumStick from "../sounds/drum-stick.mp3";
+import MetronomeTick from "../sounds/metronome-tick.mp3";
+import metronome from "./metronome";
 import './keyboard.css'
 
 export default function Keyboard() {
@@ -18,41 +20,62 @@ export default function Keyboard() {
     const recordStartTime = useRef(null);
 
     const keySound = useMemo(
-        () => [
-        { name:"A", key: "A", sound: SnareDrum },
-        { name:"S", key: "S", sound: DrumKick },
-        { name:"D", key: "D", sound: Crash },
-        { name:"F", key: "F", sound: Drum },
-        { name:"H", key: "H", sound: Drum2 },
-        { name:"J", key: "J", sound: Clap },
-        { name:"K", key: "K", sound: Drum3 },
-        { name:"L", key: "L", sound: DrumStick },
-    ], []);
+        () => {
+            return [
+                { name: "A", key: "A", sound: SnareDrum },
+                { name: "S", key: "S", sound: DrumKick },
+                { name: "D", key: "D", sound: Crash },
+                { name: "F", key: "F", sound: Drum },
+                { name: "H", key: "H", sound: Drum2 },
+                { name: "J", key: "J", sound: Clap },
+                { name: "K", key: "K", sound: Drum3 },
+                { name: "L", key: "L", sound: DrumStick },
+            ];
+        }, []);
 
-    const playSound = (sound) => {
+    const playMetronomeTick = useCallback(() => {
+    const audio = new Audio(MetronomeTick);
+    audio.currentTime = 0;
+    audio.play();
+    }, []);
+
+    const metro = useMemo(() => metronome(playMetronomeTick), [playMetronomeTick]);
+    const [tempo, setTempo] = React.useState(metro.getTempo());
+
+    const playSound = useCallback((sound) => {
         const audio = new Audio(sound);
-        audio.currentTime = 0
+        audio.currentTime = 0;
         audio.play();
+    }, []);
+    
+    const handleIncreaseTempo = () => {
+    metro.increaseTempo();
+    setTempo(metro.getTempo());
     };
 
-    const flashKey = (k) => {
-        const el = btnRefs.current[k] || document.getElementById(`key-${k}`); // fallback if ref not set
+    const handleDecreaseTempo = () => {
+    metro.decreaseTempo();
+    setTempo(metro.getTempo());
+    };
+
+    const flashKey = useCallback((k) => {
+        const el = btnRefs.current[k] || document.getElementById(`key-${k}`);
         if (!el) return;
         el.classList.add("active");
         setTimeout(() => el.classList.remove("active"), 150);
-    };
+    }, []);
 
-    const handlePlayKey = (key) => {
-    playSound(key.sound);
-    flashKey(key.key);
-    if (recording) {
-        const now = Date.now();
-        setRecordedKeys(prev => [
-            ...prev,
-            { key: key.key, sound: key.sound, time: now - recordStartTime.current }
-        ]);
-    }
-    };
+    const handlePlayKey = useCallback((key) => {
+        playSound(key.sound);
+        flashKey(key.key);
+        if (recording) {
+            const now = Date.now();
+            setRecordedKeys(prev => [
+                ...prev,
+                { key: key.key, sound: key.sound, time: now - recordStartTime.current }
+            ]);
+        }
+    }, [playSound, flashKey, recording]);
 
     useEffect(() => {
         const handleKeyDown = (event) => {
@@ -66,7 +89,7 @@ export default function Keyboard() {
         return () => {
             document.removeEventListener("keydown", handleKeyDown);
         };
-    }, [keySound, recording]);
+        }, [keySound, recording, handlePlayKey]);
 
     const startRecording = () => {
         setRecordedKeys([]);
@@ -79,16 +102,21 @@ export default function Keyboard() {
     };
 
     const playRecording = async () => {
-        if (recordedKeys.length === 0) return;
-        setIsPlaying(true);
-        for (let i = 0; i < recordedKeys.length; i++) {
-            const { key, sound, time } = recordedKeys[i];
-            const delay = i === 0 ? time : time - recordedKeys[i - 1].time;
-            await new Promise(res => setTimeout(res, delay));
-            playSound(sound);
-            flashKey(key);
+        try {
+            if (recordedKeys.length === 0) return;
+            setIsPlaying(true);
+            for (let i = 0; i < recordedKeys.length; i++) {
+                const { key, sound, time } = recordedKeys[i];
+                const delay = i === 0 ? time : time - recordedKeys[i - 1].time;
+                await new Promise(res => setTimeout(res, delay));
+                playSound(sound);
+                flashKey(key);
+            }
+            setIsPlaying(false);
+        } catch (error) {
+            console.error("Error playing recording:", error);
+            setIsPlaying(false);
         }
-        setIsPlaying(false);
     };
 
     return (
@@ -120,6 +148,13 @@ export default function Keyboard() {
                 <button onClick={playRecording} disabled={recordedKeys.length === 0 || recording || isPlaying}>
                     Play Recording
                 </button>
+            </div>
+            <div>
+                <p>Current Tempo: {tempo}</p>
+                <button onClick={metro.start}>Start Metronome</button>
+                <button onClick={metro.stop}>Stop Metronome</button>
+                <button onClick={handleIncreaseTempo}>Increase Tempo</button>
+                <button onClick={handleDecreaseTempo}>Decrease Tempo</button>
             </div>
         </div>
         );
