@@ -7,17 +7,21 @@ function App() {
   const [dance, setDance] = useState(false);
   const danceTimeout = useRef(null);
 
-  // Metronome tick callback
   const handleMetronomeTick = () => {
-    setDance(true);
+    setDance(false);
+    
+    requestAnimationFrame(() => {
+      setDance(true);
+    });
+
     clearTimeout(danceTimeout.current);
-    danceTimeout.current = setTimeout(() => setDance(false), 300); // match animation duration
+    danceTimeout.current = setTimeout(() => setDance(false), 300); 
   };
 
   return (
     <>
       <div className="container">
-        <MusicNote className={`music-note${dance ? " dance-trigger" : ""} dancing`} />
+        <MusicNote className={`music-note${dance ? " dance-trigger" : ""}`} />
         <Keyboard metronomeTick={handleMetronomeTick} />
       </div>
     </>

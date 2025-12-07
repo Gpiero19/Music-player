@@ -1,6 +1,6 @@
 import React, {useEffect, useRef, useMemo, useCallback} from "react";
 import Drum from "../sounds/bass-drum.mp3";
-import Farts from "../sounds/farts-value.mp3";
+// import Farts from "../sounds/farts-value.mp3";
 import Crash from "../sounds/crash-drum.mp3";
 import Drum2 from "../sounds/drums-1-converted.mp3";
 import Clap from "../sounds/clap1.mp3";
@@ -12,7 +12,7 @@ import MetronomeTick from "../sounds/metronome-tick.mp3";
 import metronome from "./metronome";
 import './keyboard.css'
 
-export default function Keyboard() {
+export default function Keyboard({ metronomeTick }) {
     const btnRefs = useRef({});
     const [recording, setRecording] = React.useState(false);
     const [recordedKeys, setRecordedKeys] = React.useState([]);
@@ -37,9 +37,17 @@ export default function Keyboard() {
     const audio = new Audio(MetronomeTick);
     audio.currentTime = 0;
     audio.play();
-    }, []);
 
-    const metro = useMemo(() => metronome(playMetronomeTick), [playMetronomeTick]);
+    if (metronomeTick) metronomeTick();
+    }, [metronomeTick]);
+
+    const metroRef = useRef(null);
+
+    if (metroRef.current === null) {
+    metroRef.current = metronome(playMetronomeTick);
+    }
+    const metro = metroRef.current;
+    
     const [tempo, setTempo] = React.useState(metro.getTempo());
 
     const playSound = useCallback((sound) => {

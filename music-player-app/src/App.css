@@ -6,16 +6,11 @@
 }
 
 .music-note {
+  animation: none;
   font-size: 5em;
   will-change: transform, filter;
-  transition: filter 300ms;
+  /* transition: filter 300ms; */
   padding-bottom: 4rem;
-}
-.music-note:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.music-note.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
 }
 
 @keyframes dance {
