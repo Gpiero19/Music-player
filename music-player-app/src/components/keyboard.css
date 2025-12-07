@@ -1,41 +1,21 @@
-/* .keyboard {
+.keyboard-column {
   display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
+  justify-content: center;
+  flex-direction: column;
+  width: 700px;
+  gap: 16px;
+  box-sizing: border-box;
 }
-
-.keys {
-  width: 80px;
-  height: 80px;
-  border: none;
-  border-radius: 12px;
-  background: #222;
-  color: #fff;
-  font-size: 24px;
-  cursor: pointer;
-  transition: transform 120ms ease, background 120ms ease, box-shadow 120ms ease;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.25);
-}
-
-.keys:active {
-  transform: scale(1.12);
-}
-
-.keys.active {
-  transform: scale(1.12);
-  background: #218e1f;
-  box-shadow: 0 6px 18px rgba(0,0,0,0.35);
-} */
 
 .keyboard {
   display: flex;
-  justify-content: center;
-  align-items: flex-end;
   gap: 4px;
   padding: 20px;
-  /* background: white; */
   border-radius: 12px;
-  /* box-shadow: 0 4px 12px rgba(0,0,0,0.15); */
+  justify-content: center;
+}
+.metronome-controls button{
+  margin: 0 5px;
 }
 
 .keys {
@@ -63,4 +43,47 @@
   background: #ffe066;
   box-shadow: 0 2px #666;
   transform: translateY(2px);
+}
+
+.recent-history {
+  border: 2px solid #ccc;
+  border-radius: 12px;
+  padding: 12px 16px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  font-family: sans-serif;
+}
+
+.recent-history h3 {
+  margin-top: 0;
+  font-size: 16px;
+  text-align: center;
+}
+
+.recent-history table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 8px;
+}
+
+.recent-history th,
+.recent-history td {
+  padding: 6px 8px;
+  border-bottom: 1px solid #ddd;
+  text-align: center;
+}
+
+.recent-history button {
+  background: #fff;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  padding: 4px 8px;
+  cursor: pointer;
+  font-size: 12px;
+  color: #444;
+  transition: all 0.2s;
+}
+
+.recent-history button:hover {
+  background: #ffe066;
+  border-color: #ffdd33;
 }

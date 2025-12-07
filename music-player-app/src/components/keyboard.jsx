@@ -1,6 +1,5 @@
 import React, {useEffect, useRef, useMemo, useCallback} from "react";
 import Drum from "../sounds/bass-drum.mp3";
-// import Farts from "../sounds/farts-value.mp3";
 import Crash from "../sounds/crash-drum.mp3";
 import Drum2 from "../sounds/drums-1-converted.mp3";
 import Clap from "../sounds/clap1.mp3";
@@ -18,6 +17,12 @@ export default function Keyboard({ metronomeTick }) {
     const [recordedKeys, setRecordedKeys] = React.useState([]);
     const [isPlaying, setIsPlaying] = React.useState(false);
     const recordStartTime = useRef(null);
+    const [recentHistory, setRecentHistory] = React.useState([]);
+    const [recordCounter, setRecordCounter] = React.useState(
+        () => Number(localStorage.getItem('recordCounter') || 1));
+    const loadRecording = (record) => {
+        setRecordedKeys(record.keys);
+    }
 
     const keySound = useMemo(
         () => {
@@ -47,7 +52,7 @@ export default function Keyboard({ metronomeTick }) {
     metroRef.current = metronome(playMetronomeTick);
     }
     const metro = metroRef.current;
-    
+
     const [tempo, setTempo] = React.useState(metro.getTempo());
 
     const playSound = useCallback((sound) => {
@@ -107,15 +112,27 @@ export default function Keyboard({ metronomeTick }) {
 
     const stopRecording = () => {
         setRecording(false);
+
+        if (recordedKeys.length > 0) {
+            setRecentHistory(prev => [
+                {id: Date.now(), keys: recordedKeys, index: recordCounter}, 
+                ...prev].slice(0, 5));
+                
+            setRecordCounter(prev => {
+                const next = prev + 1;
+                localStorage.setItem("recordCounter", next);
+                return next;
+                });
+        }
     };
 
-    const playRecording = async () => {
+    const playRecording = async (keys = recordedKeys) => {
+        if (!Array.isArray(keys) || keys.length === 0) return;
         try {
-            if (recordedKeys.length === 0) return;
             setIsPlaying(true);
-            for (let i = 0; i < recordedKeys.length; i++) {
-                const { key, sound, time } = recordedKeys[i];
-                const delay = i === 0 ? time : time - recordedKeys[i - 1].time;
+            for (let i = 0; i < keys.length; i++) {
+                const { key, sound, time } = keys[i];
+                const delay = i === 0 ? time : time - keys[i - 1].time;
                 await new Promise(res => setTimeout(res, delay));
                 playSound(sound);
                 flashKey(key);
@@ -128,7 +145,17 @@ export default function Keyboard({ metronomeTick }) {
     };
 
     return (
-        <div>
+        <>
+        <div className="keyboard-column">
+
+            <div className="metronome-controls">
+                <p>Current Tempo: {tempo}</p>
+                <button onClick={metro.start}>Start Metronome</button>
+                <button onClick={metro.stop}>Stop Metronome</button>
+                <button onClick={handleIncreaseTempo}>Increase Tempo</button>
+                <button onClick={handleDecreaseTempo}>Decrease Tempo</button>
+            </div>
+
             <div className="keyboard">
                 {keySound.map((key) => (
                     <button 
@@ -143,6 +170,7 @@ export default function Keyboard({ metronomeTick }) {
                     </button>
                 ))}
             </div>
+
             <div style={{marginTop: 16}}>
                 {!recording ? (
                     <button onClick={startRecording} disabled={isPlaying}>
@@ -153,20 +181,41 @@ export default function Keyboard({ metronomeTick }) {
                         Stop Recording
                     </button>
                 )}
-                <button onClick={playRecording} disabled={recordedKeys.length === 0 || recording || isPlaying}>
-                    Play Recording
-                </button>
+
             </div>
-            <div>
-                <p>Current Tempo: {tempo}</p>
-                <button onClick={metro.start}>Start Metronome</button>
-                <button onClick={metro.stop}>Stop Metronome</button>
-                <button onClick={handleIncreaseTempo}>Increase Tempo</button>
-                <button onClick={handleDecreaseTempo}>Decrease Tempo</button>
+
+            <div className="recent-history"> 
+                <h3>Recent Recordings</h3>            
+                {recentHistory.length === 0 && <p>No recent recordings.</p>}
+                {recentHistory.length > 0 &&(
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Record #</th> 
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {recentHistory.map((record) => (
+                                <tr key={record.id}>
+                                    <td>{record.index}</td>
+                                <td>
+                                    <button
+                                        onClick={async () => {
+                                            loadRecording(record);
+                                            await playRecording(record.keys);    
+                                        }}
+                                    >
+                                     Play
+                                    </button>
+                                </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                )}
             </div>
         </div>
-        );
-        }
-
-
-// Add a way to record what was played and play it back - so you can create a beat for your own
+        </>
+    );
+}
