@@ -8,7 +8,7 @@ This project allows you to play, record, and navigate through recorded history w
 ---
 
 ## 🚀 Live Demo
-You can try the app live here: [Add your deployed link later]
+You can try the app live here: https://Gpiero19.github.io/Music-player/
 
 ---
 
