@@ -28,6 +28,7 @@ interface HistoryEntry {
     id: number;
     keys: RecordedKey[];
     index: number;
+    name: string;
 }
 
 interface KeyboardProps {
@@ -150,7 +151,7 @@ export default function Keyboard({ metronomeTick }: KeyboardProps) {
         setRecording(false);
         if (recordedKeys.length > 0) {
             const next: HistoryEntry[] = [
-                { id: Date.now(), keys: recordedKeys, index: recordCounter },
+                { id: Date.now(), keys: recordedKeys, index: recordCounter, name: `Recording #${recordCounter}` },
                 ...recentHistory,
             ].slice(0, 5);
             setRecentHistory(next);
@@ -161,6 +162,18 @@ export default function Keyboard({ metronomeTick }: KeyboardProps) {
                 return nextCounter;
             });
         }
+    };
+
+    const deleteRecording = (id: number) => {
+        const next = recentHistory.filter(r => r.id !== id);
+        setRecentHistory(next);
+        localStorage.setItem('recentHistory', JSON.stringify(next));
+    };
+
+    const renameRecording = (id: number, name: string) => {
+        const next = recentHistory.map(r => r.id === id ? { ...r, name } : r);
+        setRecentHistory(next);
+        localStorage.setItem('recentHistory', JSON.stringify(next));
     };
 
     const stopPlayback = useCallback(() => {
@@ -211,6 +224,7 @@ export default function Keyboard({ metronomeTick }: KeyboardProps) {
                         key={key.name}
                         ref={(el) => { btnRefs.current[key.key] = el; }}
                         onMouseDown={() => handlePlayKey(key)}
+                        onTouchStart={(e) => { e.preventDefault(); handlePlayKey(key); }}
                         disabled={isPlaying}
                         aria-label={`${key.label} (${key.key})`}
                     >
@@ -238,14 +252,22 @@ export default function Keyboard({ metronomeTick }: KeyboardProps) {
                     <table>
                         <thead>
                             <tr>
-                                <th>Record #</th>
-                                <th>Action</th>
+                                <th>Name</th>
+                                <th>Play</th>
+                                <th>Delete</th>
                             </tr>
                         </thead>
                         <tbody>
                             {recentHistory.map((record) => (
                                 <tr key={record.id}>
-                                    <td>{record.index}</td>
+                                    <td>
+                                        <input
+                                            className="recording-name-input"
+                                            value={record.name}
+                                            onChange={(e) => renameRecording(record.id, e.target.value)}
+                                            aria-label="Recording name"
+                                        />
+                                    </td>
                                     <td>
                                         {isPlaying ? (
                                             <button onClick={stopPlayback}>Stop</button>
@@ -259,6 +281,14 @@ export default function Keyboard({ metronomeTick }: KeyboardProps) {
                                                 Play
                                             </button>
                                         )}
+                                    </td>
+                                    <td>
+                                        <button
+                                            onClick={() => deleteRecording(record.id)}
+                                            aria-label={`Delete ${record.name}`}
+                                        >
+                                            ✕
+                                        </button>
                                     </td>
                                 </tr>
                             ))}
