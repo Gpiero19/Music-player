@@ -2,20 +2,44 @@
   display: flex;
   justify-content: center;
   flex-direction: column;
-  width: 700px;
+  width: 100%;
+  max-width: 700px;
   gap: 16px;
   box-sizing: border-box;
 }
 
 .keyboard {
   display: flex;
+  flex-wrap: wrap;
   gap: 4px;
   padding: 20px;
   border-radius: 12px;
   justify-content: center;
+  max-width: 100%;
 }
 .metronome-controls button{
   margin: 0 5px;
+}
+
+.metronome-active-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: #4caf50;
+  margin-right: 8px;
+  animation: pulse 1s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.4; transform: scale(0.85); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .metronome-active-dot {
+    animation: none;
+  }
 }
 
 .keys {

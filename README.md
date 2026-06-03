@@ -1,62 +1,66 @@
-# Music Player 🎵
+# Drum Pad
 
-A simple web-based music player built with HTML, CSS, and JavaScript.  
-This project allows you to play, record, and navigate through recorded history with a clean interactive UI.
+A browser-based drum pad and metronome built with React. Play eight drum sounds via keyboard or mouse, record your performance, and replay it with accurate timing.
 
-![Music Player Screenshot](./src/assets/Screenshot-Music-player.png)
-
----
-
-## 🚀 Live Demo
-You can try the app live here: https://Gpiero19.github.io/Music-player/
+![Drum Pad Screenshot](./src/assets/Screenshot-Music-player.png)
 
 ---
 
-## 🛠 Features
-- Play your own music
-- Display recorded history of music  
-- Responsive design  
+## Live Demo
+
+[https://Gpiero19.github.io/Music-player/](https://Gpiero19.github.io/Music-player/)
 
 ---
 
-## 💻 Tech Stack
-- HTML5
-- CSS3
-- JavaScript (ES6)
-- [Vite](https://vitejs.dev/) (for faster development & hot-reload)
+## Features
+
+- 8 drum pad keys mapped to keyboard shortcuts (A S D F H J K L)
+- Metronome with adjustable BPM (40–240), visual running indicator
+- Record a performance and replay it with the original timing
+- Stores up to 5 recent recordings — persisted across page refreshes via localStorage
+- Responsive layout — works on desktop and mobile
+- Accessible: ARIA labels on all interactive controls, respects `prefers-reduced-motion`
+
+---
+
+## Tech Stack
+
+- [React 19](https://react.dev/) — functional components, hooks (useState, useEffect, useRef, useMemo, useCallback)
+- [Vite 7](https://vitejs.dev/) — build tooling and dev server
+- Web Audio API — HTMLAudioElement with pre-created audio pools for low-latency playback
+- localStorage — lightweight persistence for recordings and session counter
+- [gh-pages](https://github.com/tschaub/gh-pages) — deployment to GitHub Pages
 
 ---
 
 ## Getting Started
 
-1. Clone the repository:
-
+```bash
 git clone https://github.com/Gpiero19/Music-player.git
 cd Music-player
-
-2. Install dependencies:
-
 npm install
+npm run dev
+```
 
-3. Run the project locally using Vite:
-npx vite
-
-4. Open your browser and go to:
-
-http://localhost:5173
+Open [http://localhost:5173](http://localhost:5173) in your browser.
 
 ---
 
-## What I learned / Challenge
+## Available Scripts
 
-**Working with the Web Audio API:** Learned how to load, play, and control audio files dynamically in the browser. Managing playback, track history, and responsive controls was a key challenge.
+| Script | Description |
+|--------|-------------|
+| `npm run dev` | Start the development server |
+| `npm run build` | Build for production |
+| `npm run lint` | Run ESLint |
+| `npm run deploy` | Build and deploy to GitHub Pages |
 
-**File handling for user-selected music:** Implemented functionality for users to select their own collection of music files, which taught me how to handle file inputs securely and display metadata dynamically.
+---
 
-**State management in vanilla JavaScript:** Managing the player state (current track, play/pause, history) without a framework strengthened my understanding of DOM manipulation and event handling.
+## What I Learned
 
-**Responsive design:** Ensured that the player UI works smoothly across desktop and mobile devices, which required planning layouts and testing different screen sizes.
-
-**Integrating Vite for fast development:** Learned to set up a modern build tool with hot-reloading, speeding up development and making the project structure more maintainable.
-
-**Problem-solving and debugging:** Handling edge cases like multiple files, simultaneous play, and updating the UI in real-time improved my debugging and troubleshooting skills.
+- **React hooks in practice** — managing audio state, recording timers, and playback with `useRef`, `useCallback`, and `useMemo` without unnecessary re-renders.
+- **Audio performance** — pre-creating `HTMLAudioElement` objects at mount time rather than on every keypress to avoid latency and GC pressure.
+- **Async playback with cancellation** — driving a timed playback loop with `setTimeout` promises and a ref-based abort flag so playback can be stopped mid-sequence.
+- **localStorage persistence** — serializing and restoring structured state (recording history) across sessions with safe JSON parsing.
+- **Accessibility** — adding ARIA labels to non-descriptive controls and respecting the `prefers-reduced-motion` media query for animations.
