@@ -17,6 +17,7 @@ export default function Keyboard({ metronomeTick }) {
     const [recordedKeys, setRecordedKeys] = React.useState([]);
     const [isPlaying, setIsPlaying] = React.useState(false);
     const recordStartTime = useRef(null);
+    const playbackAbortRef = useRef(false);
     const [recentHistory, setRecentHistory] = React.useState([]);
     const [recordCounter, setRecordCounter] = React.useState(
         () => Number(localStorage.getItem('recordCounter') || 1));
@@ -38,13 +39,20 @@ export default function Keyboard({ metronomeTick }) {
             ];
         }, []);
 
-    const playMetronomeTick = useCallback(() => {
-    const audio = new Audio(MetronomeTick);
-    audio.currentTime = 0;
-    audio.play();
+    const soundMap = useMemo(() =>
+        keySound.reduce((acc, k) => {
+            acc[k.key] = new Audio(k.sound);
+            return acc;
+        }, {}),
+    [keySound]);
 
-    if (metronomeTick) metronomeTick();
-    }, [metronomeTick]);
+    const metronomeAudio = useMemo(() => new Audio(MetronomeTick), []);
+
+    const playMetronomeTick = useCallback(() => {
+        metronomeAudio.currentTime = 0;
+        metronomeAudio.play();
+        if (metronomeTick) metronomeTick();
+    }, [metronomeTick, metronomeAudio]);
 
     const metroRef = useRef(null);
 
@@ -55,11 +63,12 @@ export default function Keyboard({ metronomeTick }) {
 
     const [tempo, setTempo] = React.useState(metro.getTempo());
 
-    const playSound = useCallback((sound) => {
-        const audio = new Audio(sound);
+    const playSound = useCallback((key) => {
+        const audio = soundMap[key];
+        if (!audio) return;
         audio.currentTime = 0;
         audio.play();
-    }, []);
+    }, [soundMap]);
     
     const handleIncreaseTempo = () => {
     metro.increaseTempo();
@@ -79,7 +88,7 @@ export default function Keyboard({ metronomeTick }) {
     }, []);
 
     const handlePlayKey = useCallback((key) => {
-        playSound(key.sound);
+        playSound(key.key);
         flashKey(key.key);
         if (recording) {
             const now = Date.now();
@@ -126,15 +135,23 @@ export default function Keyboard({ metronomeTick }) {
         }
     };
 
+    const stopPlayback = useCallback(() => {
+        playbackAbortRef.current = true;
+        setIsPlaying(false);
+    }, []);
+
     const playRecording = async (keys = recordedKeys) => {
         if (!Array.isArray(keys) || keys.length === 0) return;
         try {
+            playbackAbortRef.current = false;
             setIsPlaying(true);
             for (let i = 0; i < keys.length; i++) {
-                const { key, sound, time } = keys[i];
+                if (playbackAbortRef.current) break;
+                const { key, time } = keys[i];
                 const delay = i === 0 ? time : time - keys[i - 1].time;
                 await new Promise(res => setTimeout(res, delay));
-                playSound(sound);
+                if (playbackAbortRef.current) break;
+                playSound(key);
                 flashKey(key);
             }
             setIsPlaying(false);
@@ -200,14 +217,20 @@ export default function Keyboard({ metronomeTick }) {
                                 <tr key={record.id}>
                                     <td>{record.index}</td>
                                 <td>
-                                    <button
-                                        onClick={async () => {
-                                            loadRecording(record);
-                                            await playRecording(record.keys);    
-                                        }}
-                                    >
-                                     Play
-                                    </button>
+                                    {isPlaying ? (
+                                        <button onClick={stopPlayback}>
+                                            Stop
+                                        </button>
+                                    ) : (
+                                        <button
+                                            onClick={async () => {
+                                                loadRecording(record);
+                                                await playRecording(record.keys);
+                                            }}
+                                        >
+                                            Play
+                                        </button>
+                                    )}
                                 </td>
                                 </tr>
                             ))}
