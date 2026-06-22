@@ -1,4 +1,4 @@
-import { useEffect, useRef, useMemo, useCallback, useState } from "react";
+import { useEffect, useRef, useCallback } from "react";
 import Drum from "../assets/bass-drum.mp3";
 import Crash from "../assets/crash-drum.mp3";
 import Drum2 from "../assets/drums-1-converted.mp3";
@@ -7,29 +7,24 @@ import Drum3 from "../assets/drum2.mp3";
 import SnareDrum from "../assets/snare-drum.mp3";
 import DrumKick from "../assets/acoustic-drum-kick.mp3";
 import DrumStick from "../assets/drum-stick.mp3";
-import MetronomeTick from "../assets/metronome-tick.mp3";
-import metronome, { MetronomeInstance } from "./metronome";
+import { useAudioPool } from "../hooks/useAudioPool";
+import { useRecording } from "../hooks/useRecording";
+import { useRecordingHistory } from "../hooks/useRecordingHistory";
+import { usePlayback } from "../hooks/usePlayback";
+import { useMetronome } from "../hooks/useMetronome";
+import { KeySound } from "../types";
 import './keyboard.css'
 
-interface KeySound {
-    name: string;
-    key: string;
-    sound: string;
-    label: string;
-}
-
-interface RecordedKey {
-    key: string;
-    sound: string;
-    time: number;
-}
-
-interface HistoryEntry {
-    id: number;
-    keys: RecordedKey[];
-    index: number;
-    name: string;
-}
+const KEY_SOUNDS: KeySound[] = [
+    { name: "A", key: "A", sound: SnareDrum,  label: "Snare Drum" },
+    { name: "S", key: "S", sound: DrumKick,   label: "Kick Drum" },
+    { name: "D", key: "D", sound: Crash,       label: "Crash Cymbal" },
+    { name: "F", key: "F", sound: Drum,        label: "Bass Drum" },
+    { name: "H", key: "H", sound: Drum2,       label: "Tom" },
+    { name: "J", key: "J", sound: Clap,        label: "Clap" },
+    { name: "K", key: "K", sound: Drum3,       label: "Hi-hat" },
+    { name: "L", key: "L", sound: DrumStick,   label: "Drum Stick" },
+];
 
 interface KeyboardProps {
     metronomeTick: () => void;
@@ -37,79 +32,6 @@ interface KeyboardProps {
 
 export default function Keyboard({ metronomeTick }: KeyboardProps) {
     const btnRefs = useRef<Record<string, HTMLButtonElement | null>>({});
-    const [recording, setRecording] = useState(false);
-    const [recordedKeys, setRecordedKeys] = useState<RecordedKey[]>([]);
-    const [isPlaying, setIsPlaying] = useState(false);
-    const recordStartTime = useRef<number | null>(null);
-    const playbackAbortRef = useRef(false);
-    const [recentHistory, setRecentHistory] = useState<HistoryEntry[]>(() => {
-        try {
-            return JSON.parse(localStorage.getItem('recentHistory') || '[]') as HistoryEntry[];
-        } catch {
-            return [];
-        }
-    });
-    const [recordCounter, setRecordCounter] = useState(
-        () => Number(localStorage.getItem('recordCounter') || 1));
-
-    const loadRecording = (record: HistoryEntry) => {
-        setRecordedKeys(record.keys);
-    };
-
-    const keySound = useMemo<KeySound[]>(() => [
-        { name: "A", key: "A", sound: SnareDrum,  label: "Snare Drum" },
-        { name: "S", key: "S", sound: DrumKick,   label: "Kick Drum" },
-        { name: "D", key: "D", sound: Crash,       label: "Crash Cymbal" },
-        { name: "F", key: "F", sound: Drum,        label: "Bass Drum" },
-        { name: "H", key: "H", sound: Drum2,       label: "Tom" },
-        { name: "J", key: "J", sound: Clap,        label: "Clap" },
-        { name: "K", key: "K", sound: Drum3,       label: "Hi-hat" },
-        { name: "L", key: "L", sound: DrumStick,   label: "Drum Stick" },
-    ], []);
-
-    const soundMap = useMemo<Record<string, HTMLAudioElement>>(() =>
-        keySound.reduce((acc, k) => {
-            acc[k.key] = new Audio(k.sound);
-            return acc;
-        }, {} as Record<string, HTMLAudioElement>),
-    [keySound]);
-
-    const metronomeAudio = useMemo(() => new Audio(MetronomeTick), []);
-
-    const playMetronomeTick = useCallback(() => {
-        metronomeAudio.currentTime = 0;
-        metronomeAudio.play();
-        metronomeTick();
-    }, [metronomeTick, metronomeAudio]);
-
-    const metroRef = useRef<MetronomeInstance | null>(null);
-    if (metroRef.current === null) {
-        metroRef.current = metronome(playMetronomeTick);
-    }
-    const metro = metroRef.current;
-
-    const [tempo, setTempo] = useState(metro.getTempo());
-    const [isMetronomeRunning, setIsMetronomeRunning] = useState(false);
-
-    const handleStartMetronome = () => { metro.start(); setIsMetronomeRunning(true); };
-    const handleStopMetronome = () => { metro.stop(); setIsMetronomeRunning(false); };
-
-    const playSound = useCallback((key: string) => {
-        const audio = soundMap[key];
-        if (!audio) return;
-        audio.currentTime = 0;
-        audio.play();
-    }, [soundMap]);
-
-    const handleIncreaseTempo = () => {
-        metro.increaseTempo();
-        setTempo(metro.getTempo());
-    };
-
-    const handleDecreaseTempo = () => {
-        metro.decreaseTempo();
-        setTempo(metro.getTempo());
-    };
 
     const flashKey = useCallback((k: string) => {
         const el = btnRefs.current[k] ?? document.getElementById(`key-${k}`);
@@ -118,106 +40,48 @@ export default function Keyboard({ metronomeTick }: KeyboardProps) {
         setTimeout(() => el.classList.remove("active"), 150);
     }, []);
 
+    const { playSound } = useAudioPool(KEY_SOUNDS);
+    const { recording, startRecording, stopRecording, recordKey } = useRecording();
+    const { recentHistory, addRecording, deleteRecording, renameRecording } = useRecordingHistory();
+    const { isPlaying, playRecording, stopPlayback } = usePlayback(playSound, flashKey);
+    const { tempo, isRunning, start, stop, increaseTempo, decreaseTempo, isAtMin, isAtMax } = useMetronome(metronomeTick);
+
     const handlePlayKey = useCallback((key: KeySound) => {
         playSound(key.key);
         flashKey(key.key);
-        if (recording) {
-            const now = Date.now();
-            setRecordedKeys(prev => [
-                ...prev,
-                { key: key.key, sound: key.sound, time: now - (recordStartTime.current ?? 0) },
-            ]);
-        }
-    }, [playSound, flashKey, recording]);
+        if (recording) recordKey(key.key, key.sound);
+    }, [playSound, flashKey, recording, recordKey]);
+
+    const handleStopRecording = useCallback(() => {
+        addRecording(stopRecording());
+    }, [stopRecording, addRecording]);
 
     useEffect(() => {
         const handleKeyDown = (event: KeyboardEvent) => {
-            const key = event.key.toUpperCase();
-            const soundObj = keySound.find((x) => x.key === key);
+            const soundObj = KEY_SOUNDS.find(x => x.key === event.key.toUpperCase());
             if (!soundObj) return;
             handlePlayKey(soundObj);
         };
         document.addEventListener("keydown", handleKeyDown);
         return () => document.removeEventListener("keydown", handleKeyDown);
-    }, [keySound, handlePlayKey]);
-
-    const startRecording = () => {
-        setRecordedKeys([]);
-        setRecording(true);
-        recordStartTime.current = Date.now();
-    };
-
-    const stopRecording = () => {
-        setRecording(false);
-        if (recordedKeys.length > 0) {
-            const next: HistoryEntry[] = [
-                { id: Date.now(), keys: recordedKeys, index: recordCounter, name: `Recording #${recordCounter}` },
-                ...recentHistory,
-            ].slice(0, 5);
-            setRecentHistory(next);
-            localStorage.setItem('recentHistory', JSON.stringify(next));
-            setRecordCounter(prev => {
-                const nextCounter = prev + 1;
-                localStorage.setItem("recordCounter", String(nextCounter));
-                return nextCounter;
-            });
-        }
-    };
-
-    const deleteRecording = (id: number) => {
-        const next = recentHistory.filter(r => r.id !== id);
-        setRecentHistory(next);
-        localStorage.setItem('recentHistory', JSON.stringify(next));
-    };
-
-    const renameRecording = (id: number, name: string) => {
-        const next = recentHistory.map(r => r.id === id ? { ...r, name } : r);
-        setRecentHistory(next);
-        localStorage.setItem('recentHistory', JSON.stringify(next));
-    };
-
-    const stopPlayback = useCallback(() => {
-        playbackAbortRef.current = true;
-        setIsPlaying(false);
-    }, []);
-
-    const playRecording = async (keys: RecordedKey[] = recordedKeys) => {
-        if (!Array.isArray(keys) || keys.length === 0) return;
-        try {
-            playbackAbortRef.current = false;
-            setIsPlaying(true);
-            for (let i = 0; i < keys.length; i++) {
-                if (playbackAbortRef.current) break;
-                const { key, time } = keys[i];
-                const delay = i === 0 ? time : time - keys[i - 1].time;
-                await new Promise<void>(res => setTimeout(res, delay));
-                if (playbackAbortRef.current) break;
-                playSound(key);
-                flashKey(key);
-            }
-            setIsPlaying(false);
-        } catch (error) {
-            console.error("Error playing recording:", error);
-            setIsPlaying(false);
-        }
-    };
+    }, [handlePlayKey]);
 
     return (
         <div className="keyboard-column">
             <div className="metronome-controls">
                 <p>
-                    {isMetronomeRunning && <span className="metronome-active-dot" aria-hidden="true" />}
+                    {isRunning && <span className="metronome-active-dot" aria-hidden="true" />}
                     Current Tempo: {tempo} BPM
                 </p>
-                <button onClick={isMetronomeRunning ? handleStopMetronome : handleStartMetronome}>
-                    {isMetronomeRunning ? "Stop Metronome" : "Start Metronome"}
+                <button onClick={isRunning ? stop : start}>
+                    {isRunning ? "Stop Metronome" : "Start Metronome"}
                 </button>
-                <button onClick={handleIncreaseTempo} disabled={metro.isAtMax()}>Increase Tempo</button>
-                <button onClick={handleDecreaseTempo} disabled={metro.isAtMin()}>Decrease Tempo</button>
+                <button onClick={increaseTempo} disabled={isAtMax}>Increase Tempo</button>
+                <button onClick={decreaseTempo} disabled={isAtMin}>Decrease Tempo</button>
             </div>
 
             <div className="keyboard">
-                {keySound.map((key) => (
+                {KEY_SOUNDS.map((key) => (
                     <button
                         id={`key-${key.key}`}
                         className="keys"
@@ -239,7 +103,7 @@ export default function Keyboard({ metronomeTick }: KeyboardProps) {
                         Start Recording
                     </button>
                 ) : (
-                    <button onClick={stopRecording}>
+                    <button onClick={handleStopRecording}>
                         Stop Recording
                     </button>
                 )}
@@ -272,12 +136,7 @@ export default function Keyboard({ metronomeTick }: KeyboardProps) {
                                         {isPlaying ? (
                                             <button onClick={stopPlayback}>Stop</button>
                                         ) : (
-                                            <button
-                                                onClick={async () => {
-                                                    loadRecording(record);
-                                                    await playRecording(record.keys);
-                                                }}
-                                            >
+                                            <button onClick={() => playRecording(record.keys)}>
                                                 Play
                                             </button>
                                         )}

@@ -25,10 +25,12 @@ A browser-based drum pad and metronome built with React. Play eight drum sounds 
 
 ## Tech Stack
 
-- [React 19](https://react.dev/) — functional components, hooks (useState, useEffect, useRef, useMemo, useCallback)
+- [React 19](https://react.dev/) — functional components with custom hooks (`useAudioPool`, `useRecording`, `useRecordingHistory`, `usePlayback`, `useMetronome`)
+- [TypeScript](https://www.typescriptlang.org/) — strict mode, shared types across hooks and components
 - [Vite 7](https://vitejs.dev/) — build tooling and dev server
-- Web Audio API — HTMLAudioElement with pre-created audio pools for low-latency playback
+- Web Audio API — per-key pools of 3 `HTMLAudioElement` objects (round-robin) so rapid repeated hits on the same pad overlap correctly
 - localStorage — lightweight persistence for recordings and session counter
+- [Vitest](https://vitest.dev/) + [Testing Library](https://testing-library.com/) — unit tests for hooks and components
 - [gh-pages](https://github.com/tschaub/gh-pages) — deployment to GitHub Pages
 
 ---
@@ -52,6 +54,8 @@ Open [http://localhost:5173](http://localhost:5173) in your browser.
 |--------|-------------|
 | `npm run dev` | Start the development server |
 | `npm run build` | Build for production |
+| `npm run type-check` | Run TypeScript type checking |
+| `npm test` | Run the test suite |
 | `npm run lint` | Run ESLint |
 | `npm run deploy` | Build and deploy to GitHub Pages |
 
@@ -59,8 +63,9 @@ Open [http://localhost:5173](http://localhost:5173) in your browser.
 
 ## What I Learned
 
+- **Custom hooks** — extracting `useAudioPool`, `useRecording`, `useRecordingHistory`, `usePlayback`, and `useMetronome` from a monolithic component to keep each hook focused on one concern and independently testable.
 - **React hooks in practice** — managing audio state, recording timers, and playback with `useRef`, `useCallback`, and `useMemo` without unnecessary re-renders.
-- **Audio performance** — pre-creating `HTMLAudioElement` objects at mount time rather than on every keypress to avoid latency and GC pressure.
+- **Audio performance** — pre-creating a pool of 3 `HTMLAudioElement` objects per pad at mount time, cycling through them round-robin so rapid repeated hits on the same pad play concurrently without audio cutting out.
 - **Async playback with cancellation** — driving a timed playback loop with `setTimeout` promises and a ref-based abort flag so playback can be stopped mid-sequence.
 - **localStorage persistence** — serializing and restoring structured state (recording history) across sessions with safe JSON parsing.
 - **Accessibility** — adding ARIA labels to non-descriptive controls and respecting the `prefers-reduced-motion` media query for animations.
